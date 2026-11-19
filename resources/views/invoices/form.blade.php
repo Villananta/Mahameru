@@ -272,7 +272,7 @@
     </div>
 
     <!-- TAB 2: A4 PAPER PREVIEW -->
-    <div class="hidden flex-col gap-space-md transition-opacity duration-200" id="view-preview">
+    <div class="hidden flex-col gap-space-md transition-opacity duration-200" id="view-preview" x-data="invoicePreview()" x-init="init()">
         <div class="flex items-center justify-between px-1">
             <div class="flex items-center gap-1.5 text-secondary">
                 <span class="material-symbols-outlined text-[18px]">verified</span>
@@ -286,17 +286,7 @@
 
         <!-- Scaled Mobile Paper Frame -->
         <div class="w-full overflow-hidden rounded-xl bg-surface-container-low p-2 sm:p-4 flex justify-center">
-            <div class="w-full max-w-[620px] bg-surface-container-lowest text-on-surface rounded-lg shadow-md p-5 sm:p-8 flex flex-col gap-5 text-left">
-                @if($isEdit)
-                    <x-invoice-paper :invoice="$invoice" mode="preview" />
-                @else
-                    <div class="flex flex-col items-center justify-center py-12 text-secondary">
-                        <span class="material-symbols-outlined text-[48px] mb-3">preview</span>
-                        <span class="font-headline-sm text-headline-sm">Pratinjau tersedia setelah item ditambahkan</span>
-                        <span class="font-body-sm text-body-sm mt-1">Isi form lalu klik tab "Preview A4"</span>
-                    </div>
-                @endif
-            </div>
+            <div class="w-full max-w-[620px] bg-surface-container-lowest text-on-surface rounded-lg shadow-md p-5 sm:p-8 flex flex-col gap-5 text-left" x-html="renderPreview()"></div>
         </div>
     </div>
 
@@ -602,6 +592,239 @@
                     status: 'draft',
                     updated_at: { format: () => new Date().toLocaleDateString('id-ID') }
                 };
+            }
+        }
+    }
+
+    // Preview tab Alpine component - live reactive preview
+    function invoicePreview() {
+        return {
+            invoiceForm: null,
+            
+            init() {
+                // Wait for invoiceForm to be available
+                this.$nextTick(() => {
+                    this.invoiceForm = document.querySelector('[x-data="invoiceForm()"]')?.__x.$data;
+                });
+            },
+            
+            formatIDR(num) {
+                return 'Rp ' + Number(num).toLocaleString('id-ID');
+            },
+            
+            formatDate(dateStr) {
+                if (!dateStr) return '';
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            },
+            
+            terbilang(num) {
+                num = Math.round(num);
+                if (num === 0) return 'Nol';
+                const units = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas', 'Dua Belas', 'Tiga Belas', 'Empat Belas', 'Lima Belas', 'Enam Belas', 'Tujuh Belas', 'Delapan Belas', 'Sembilan Belas'];
+                const tens = ['', '', 'Dua Puluh', 'Tiga Puluh', 'Empat Puluh', 'Lima Puluh', 'Enam Puluh', 'Tujuh Puluh', 'Delapan Puluh', 'Sembilan Puluh'];
+                const scales = ['', 'Ribu', 'Juta', 'Miliar', 'Triliun'];
+                let result = [], scaleIdx = 0;
+                while (num > 0) {
+                    const group = num % 1000;
+                    if (group > 0) {
+                        const words = [];
+                        const h = Math.floor(group / 100);
+                        const r = group % 100;
+                        if (h > 0) words.push(h === 1 ? 'Seratus' : units[h] + ' Ratus');
+                        if (r > 0) {
+                            if (r < 20) words.push(units[r]);
+                            else {
+                                const t = Math.floor(r / 10);
+                                const u = r % 10;
+                                words.push(tens[t]);
+                                if (u > 0) words.push(units[u]);
+                            }
+                        }
+                        if (scaleIdx > 0) {
+                            if (group === 1 && scaleIdx === 1) words.length = 0, words.push('Seribu');
+                            else words.push(scales[scaleIdx]);
+                        }
+                        result.unshift(words.join(' '));
+                    }
+                    num = Math.floor(num / 1000);
+                    scaleIdx++;
+                }
+                return result.join(' ') + ' Rupiah';
+            },
+            
+            getPreviewData() {
+                if (!this.invoiceForm) return null;
+                const f = this.invoiceForm;
+                return {
+                    invoice_number: f.isEdit ? f.invoiceNumber : 'MS-PREVIEW',
+                    client: f.selectedClient ? { name: f.selectedClient.name, address: f.selectedClient.address, npwp: f.selectedClient.npwp, email: f.selectedClient.email } : { name: 'Klien Belum Dipilih', address: '-', npwp: '-', email: '-' },
+                    issue_date: f.issueDate,
+                    due_date: f.dueDate,
+                    items: f.items,
+                    subtotal: f.subtotal,
+                    discount_type: f.discountType,
+                    discount_value: f.discountValue,
+                    discount_amount: f.discountAmount,
+                    tax_rate: f.taxRate,
+                    tax_amount: f.taxAmount,
+                    grand_total: f.grandTotal,
+                    notes: f.notes || '',
+                    status: 'draft',
+                };
+            },
+            
+            renderPreview() {
+                const data = this.getPreviewData();
+                if (!data) return '<div class="flex flex-col items-center justify-center py-12 text-secondary"><span class="material-symbols-outlined text-[48px] mb-3">preview</span><span class="font-headline-sm text-headline-sm">Pratinjau tersedia setelah form siap</span></div>';
+                
+                const formatNum = (n) => Number(n).toLocaleString('id-ID');
+                const isOverdue = data.status === 'sent' && data.due_date && new Date(data.due_date) < new Date();
+                const statusLabel = data.status === 'draft' ? 'Draft' : (data.status === 'sent' ? (isOverdue ? 'Jatuh Tempo' : 'Terkirim') : (data.status === 'paid' ? 'Lunas' : 'Dibatalkan'));
+                const statusClass = data.status === 'draft' ? 'bg-surface-container text-secondary' : (data.status === 'sent' ? (isOverdue ? 'bg-error-container text-error' : 'bg-secondary-container text-on-secondary-fixed') : (data.status === 'paid' ? 'bg-tertiary-fixed text-on-tertiary-fixed font-semibold' : 'bg-outline-variant text-on-surface-variant'));
+                
+                let itemsHtml = '';
+                data.items.forEach((item, i) => {
+                    const qty = Number(item.quantity || 0);
+                    const price = Number(item.unit_price || 0);
+                    const lineTotal = qty * price;
+                    itemsHtml += `
+                        <tr>
+                            <td class="num">${i + 1}</td>
+                            <td class="desc">${item.description || ''}</td>
+                            <td class="num">${qty.toFixed(2).replace('.', ',')}</td>
+                            <td class="price">Rp ${formatNum(price)}</td>
+                            <td class="total">Rp ${formatNum(lineTotal)}</td>
+                        </tr>
+                    `;
+                });
+                
+                const company = {
+                    name: '{{ config("invoice.company.name") }}',
+                    tagline: '{{ config("invoice.company.tagline") }}',
+                    npwp: '{{ config("invoice.company.npwp") }}',
+                    address: '{{ config("invoice.company.address") }}',
+                    phone: '{{ config("invoice.company.phone") }}',
+                    email: '{{ config("invoice.company.email") }}',
+                    bank_accounts: @json(config('invoice.company.bank_accounts')),
+                    director_name: '{{ config("invoice.company.director_name") ?? "Direktur" }}',
+                };
+                
+                return `
+                    <div style="font-family: Helvetica, Arial, sans-serif; font-size: 9pt; line-height: 1.4; color: #1a1a1a;">
+                        <!-- HEADER -->
+                        <div style="border-bottom: 2px solid #1a1a1a; padding-bottom: 8px; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; gap: 20px;">
+                                <div>
+                                    <h1 style="font-size: 16pt; font-weight: 700; margin: 0 0 4px 0;">${company.name}</h1>
+                                    <p style="font-size: 8pt; color: #666; text-transform: uppercase; letter-spacing: 1px; margin: 0;">${company.tagline}</p>
+                                    <div style="font-size: 7.5pt; color: #444; line-height: 1.5;">
+                                        <div><strong>NPWP:</strong> ${company.npwp}</div>
+                                        <div><strong>Alamat:</strong> ${company.address}</div>
+                                        <div><strong>Telepon:</strong> ${company.phone} | <strong>Email:</strong> ${company.email}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right; min-width: 180px;">
+                                    <div style="font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">Nomor Faktur</div>
+                                    <div style="font-size: 10pt; font-weight: 700; font-family: monospace;">${data.invoice_number}</div>
+                                    <div style="font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px;">Tanggal Terbit</div>
+                                    <div style="font-size: 10pt; font-weight: 700; font-family: monospace;">${this.formatDate(data.issue_date)}</div>
+                                    <div style="font-size: 7pt; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 8px;">Tempo Bayar</div>
+                                    <div style="font-size: 10pt; font-weight: 700; font-family: monospace;">${this.formatDate(data.due_date)}</div>
+                                    <span style="display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; background: #e0e0e0; color: #666;">${statusLabel}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PARTIES -->
+                        <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 16px;">
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 8pt; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px 0;">Dari / Penjual</h3>
+                                <div style="font-size: 10pt; font-weight: 700;">${company.name}</div>
+                                <div style="font-size: 8pt; color: #444; line-height: 1.5;">${company.address}</div>
+                                <div style="font-size: 8pt; color: #444;"><strong>NPWP:</strong> ${company.npwp}</div>
+                            </div>
+                            <div style="flex: 1; text-align: right;">
+                                <h3 style="font-size: 8pt; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px 0;">Kepada / Pembeli</h3>
+                                <div style="font-size: 10pt; font-weight: 700;">${data.client.name}</div>
+                                <div style="font-size: 8pt; color: #444; line-height: 1.5;">${data.client.address}</div>
+                                ${data.client.npwp ? `<div style="font-size: 8pt; color: #444;"><strong>NPWP:</strong> ${data.client.npwp}</div>` : ''}
+                                ${data.client.email ? `<div style="font-size: 8pt; color: #444;"><strong>Email:</strong> ${data.client.email}</div>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- ITEMS TABLE -->
+                        <table style="width: 100%; border-collapse: collapse; font-size: 8.5pt;">
+                            <thead>
+                                <tr>
+                                    <th class="num" style="background: #f5f5f5; border-bottom: 1px solid #ddd; padding: 6px 4px; text-align: right; font-weight: 700; color: #333; text-transform: uppercase; font-size: 7pt; letter-spacing: 0.5px; width: 45px;">No</th>
+                                    <th style="background: #f5f5f5; border-bottom: 1px solid #ddd; padding: 6px 4px; text-align: left; font-weight: 700; color: #333; text-transform: uppercase; font-size: 7pt; letter-spacing: 0.5px; width: 45%;">Uraian Barang / Jasa</th>
+                                    <th class="num" style="background: #f5f5f5; border-bottom: 1px solid #ddd; padding: 6px 4px; text-align: right; font-weight: 700; color: #333; text-transform: uppercase; font-size: 7pt; letter-spacing: 0.5px; width: 12%;">Kuantitas</th>
+                                    <th class="price" style="background: #f5f5f5; border-bottom: 1px solid #ddd; padding: 6px 4px; text-align: right; font-weight: 700; color: #333; text-transform: uppercase; font-size: 7pt; letter-spacing: 0.5px; width: 70px;">Harga Satuan</th>
+                                    <th class="total" style="background: #f5f5f5; border-bottom: 1px solid #ddd; padding: 6px 4px; text-align: right; font-weight: 700; color: #333; text-transform: uppercase; font-size: 7pt; letter-spacing: 0.5px; width: 80px;">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemsHtml}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" style="text-align: right; color: #444; padding: 4px 0; padding-right: 8px;">Subtotal</td>
+                                    <td style="text-align: right; font-weight: 600;">Rp ${formatNum(data.subtotal)}</td>
+                                </tr>
+                                ${data.discount_value > 0 ? `
+                                <tr>
+                                    <td colspan="4" style="text-align: right; color: #444; padding: 4px 0; padding-right: 8px;">Diskon (${data.discount_type === 'percent' ? data.discount_value + '%' : 'Rp ' + formatNum(data.discount_value)})</td>
+                                    <td style="text-align: right; font-weight: 600; color: #c62828;">- Rp ${formatNum(data.discount_amount)}</td>
+                                </tr>
+                                ` : ''}
+                                <tr>
+                                    <td colspan="4" style="text-align: right; color: #444; padding: 4px 0; padding-right: 8px;">PPN (${Number(data.tax_rate).toFixed(2)}%)</td>
+                                    <td style="text-align: right; font-weight: 600;">Rp ${formatNum(data.tax_amount)}</td>
+                                </tr>
+                                <tr style="border-top: 1px solid #1a1a1a;">
+                                    <td colspan="4" style="text-align: right; font-size: 9.5pt; font-weight: 700; color: #1a1a1a; padding-top: 8px;">TOTAL TAGIHAN</td>
+                                    <td style="text-align: right; font-size: 11pt; font-weight: 700; color: #1a1a1a; padding-top: 8px;">Rp ${formatNum(data.grand_total)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- FOOTER -->
+                        <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 8pt; color: #444;">
+                            <div style="margin-bottom: 12px;">
+                                <h4 style="font-size: 8pt; font-weight: 700; color: #888; text-transform: uppercase; margin: 0 0 6px 0;">Instruksi Pembayaran & Rekening</h4>
+                                ${company.bank_accounts.map(bank => `
+                                    <div style="display: flex; gap: 12px; margin: 3px 0; flex-wrap: wrap;">
+                                        <span style="min-width: 80px; color: #666; font-size: 7.5pt;">${bank.bank_name}</span>
+                                        <span style="font-weight: 600; font-family: monospace; font-size: 8.5pt;">${bank.account_no} a.n. ${bank.account_name}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${data.notes ? `
+                            <div style="margin-top: 10px; padding: 8px; background: #fafafa; border: 1px dashed #ddd; border-radius: 3px;">
+                                <strong>Catatan:</strong> ${data.notes}
+                            </div>
+                            ` : ''}
+                            <div style="margin-top: 10px; font-style: italic;">
+                                <strong>Terbilang: </strong>${this.terbilang(data.grand_total)}
+                            </div>
+                        </div>
+
+                        <!-- SIGNATURE -->
+                        <div style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 12px; border-top: 1px solid #eee;">
+                            <div style="text-align: center; width: 45%;">
+                                <div style="font-size: 7.5pt; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 40px;">Penerima / Klien</div>
+                                <div style="font-size: 9pt; font-weight: 600;">(_________________________)</div>
+                                <div style="font-size: 7pt; color: #888; margin-top: 4px;">${data.client.name}</div>
+                            </div>
+                            <div style="text-align: center; width: 45%;">
+                                <div style="font-size: 7.5pt; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 40px;">Hormat Kami,<br>${company.name}</div>
+                                <div style="font-size: 9pt; font-weight: 600;">(_________________________)</div>
+                                <div style="font-size: 7pt; color: #888; margin-top: 4px;">${company.director_name}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
         }
     }
