@@ -144,7 +144,7 @@
 </div>
 
 <!-- QUICK ADD CLIENT BOTTOM SHEET -->
-<x-components.bottom-sheet id="quick-add-client-sheet" title="Registrasi Klien Cepat" subtitle="Data minimal untuk terbitkan faktur hari ini" width="max-w-lg">
+<x-bottom-sheet id="quick-add-client-sheet" title="Registrasi Klien Cepat" subtitle="Data minimal untuk terbitkan faktur hari ini" width="max-w-lg">
     <form id="quick-add-form" @submit.prevent="submitQuickClient">
         <div class="flex flex-col gap-3">
             <div class="flex flex-col gap-1">
@@ -184,14 +184,14 @@
             </button>
         </div>
     </form>
-</x-components.bottom-sheet>
+</x-bottom-sheet>
 
 <!-- CLIENT ACTION SHEET -->
-<x-components.bottom-sheet id="client-action-sheet" title="#CLIENT-NAME" subtitle="Kelola entitas & riwayat transaksi" width="max-w-md">
+<x-bottom-sheet id="client-action-sheet" title="#CLIENT-NAME" subtitle="Kelola entitas & riwayat transaksi" width="max-w-md">
     <div id="client-sheet-content" class="flex flex-col gap-1">
         <!-- Content injected by JS -->
     </div>
-</x-components.bottom-sheet>
+</x-bottom-sheet>
 
 <!-- Toast -->
 <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-lg shadow-xl font-body-sm text-body-sm flex items-center gap-2 transition-all opacity-0 pointer-events-none" id="client-toast">

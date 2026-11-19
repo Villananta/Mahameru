@@ -27,8 +27,9 @@ class InvoiceController extends Controller
     public function index(Request $request): View
     {
         $query = Invoice::query()
-            ->with(['client:id,name'])
-            ->withTrashed() // include soft-deleted clients
+            ->with(['client:id,name' => function ($q) {
+                $q->withTrashed(); // include soft-deleted clients
+            }])
             ->latestFirst();
 
         // Search
@@ -87,7 +88,7 @@ class InvoiceController extends Controller
      */
     public function show(Invoice $invoice): View
     {
-        $invoice->load(['client', 'items']);
+        $invoice->load(['client' => fn($q) => $q->withTrashed(), 'items']);
 
         return view('invoices.show', compact('invoice'));
     }
@@ -103,7 +104,7 @@ class InvoiceController extends Controller
                 ->with('error', 'Invoice sudah terkunci (status: ' . $invoice->display_status . ') dan tidak bisa diedit.');
         }
 
-        $invoice->load(['client', 'items']);
+        $invoice->load(['client' => fn($q) => $q->withTrashed(), 'items']);
 
         $clients = Client::active()
             ->orderBy('name')
@@ -189,7 +190,7 @@ class InvoiceController extends Controller
      */
     public function pdf(Invoice $invoice)
     {
-        $invoice->load(['client', 'items']);
+        $invoice->load(['client' => fn($q) => $q->withTrashed(), 'items']);
 
         $pdf = app('dompdf.wrapper');
         $pdf->loadView('invoices.pdf', compact('invoice'));

@@ -20,7 +20,7 @@
                 <div class="min-w-0">
                     <div class="flex items-center gap-space-xs">
                         <span class="font-numeric-md text-numeric-md font-bold text-on-surface truncate">#{{ $invoice->invoice_number }}</span>
-                        <x-components.status-badge :status="$invoice->status" :dueDate="$invoice->due_date" />
+                        <x-status-badge :status="$invoice->status" :dueDate="$invoice->due_date" />
                     </div>
                 </div>
             </div>
@@ -106,18 +106,18 @@
                 <span id="copy-btn-text">Salin Snippet</span>
             </button>
         </div>
-        <pre class="font-numeric-sm text-numeric-sm overflow-x-auto p-space-sm bg-black/40 rounded text-slate-200 leading-relaxed max-h-96"><code><x-components.invoice-paper :invoice="$invoice" /></code></pre>
+        <pre class="font-numeric-sm text-numeric-sm overflow-x-auto p-space-sm bg-black/40 rounded text-slate-200 leading-relaxed max-h-96"><code><x-invoice-paper :invoice="$invoice" /></code></pre>
     </div>
 
     <!-- A4 Document Rendering -->
     <div class="w-full overflow-x-auto flex justify-center py-space-xs" id="paper-outer-stage">
         <div class="transition-transform duration-200 origin-top flex justify-center w-full max-w-[820px]" id="paper-viewport">
-            <x-components.invoice-paper :invoice="$invoice" />
+            <x-invoice-paper :invoice="$invoice" />
         </div>
     </div>
 
     <!-- Status Mutation Bottom Sheet -->
-    <x-components.bottom-sheet id="status-sheet" title="Ubah Status Faktur" subtitle="{{ $invoice->invoice_number }} - {{ $invoice->client->name }}" width="max-w-md">
+    <x-bottom-sheet id="status-sheet" title="Ubah Status Faktur" subtitle="{{ $invoice->invoice_number }} - {{ $invoice->client->name }}" width="max-w-md">
         <p class="font-body-sm text-body-sm text-secondary mb-space-sm">
             Pembaruan status akan tercatat pada audit trail transaksi dan mempengaruhi rekonsiliasi kas masuk.
         </p>
@@ -175,7 +175,7 @@
                 </button>
             </div>
         </form>
-    </x-components.bottom-sheet>
+    </x-bottom-sheet>
 
     <!-- Notification Toast -->
     <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-lg shadow-xl font-body-sm text-body-sm flex items-center gap-2 transition-all opacity-0 pointer-events-none" id="toast">

@@ -284,7 +284,7 @@
         <!-- Scaled Mobile Paper Frame -->
         <div class="w-full overflow-hidden rounded-xl bg-surface-container-low p-2 sm:p-4 flex justify-center">
             <div class="w-full max-w-[620px] bg-surface-container-lowest text-on-surface rounded-lg shadow-md p-5 sm:p-8 flex flex-col gap-5 text-left">
-                <x-components.invoice-paper :invoice="invoice ?? (items.length ? createPreviewInvoice() : null)" mode="preview" />
+                <x-invoice-paper :invoice="invoice ?? (items.length ? createPreviewInvoice() : null)" mode="preview" />
             </div>
         </div>
     </div>
@@ -309,7 +309,7 @@
     </div>
 
     <!-- QUICK ADD CLIENT BOTTOM SHEET MODAL -->
-    <x-components.bottom-sheet id="quick-client-sheet" title="Registrasi Klien Kilat" subtitle="Isi data minimal untuk faktur ini" width="max-w-lg">
+    <x-bottom-sheet id="quick-client-sheet" title="Registrasi Klien Kilat" subtitle="Isi data minimal untuk faktur ini" width="max-w-lg">
         <form @submit.prevent="submitQuickClient">
             <div class="flex flex-col gap-3">
                 <div class="flex flex-col gap-1">
@@ -338,7 +338,7 @@
                 <button type="submit" class="min-h-[44px] px-5 rounded-lg bg-primary text-on-primary font-headline-sm text-body-sm shadow">Simpan & Pakai</button>
             </div>
         </form>
-    </x-components.bottom-sheet>
+    </x-bottom-sheet>
 
     <!-- Toast -->
     <div class="fixed top-20 inset-x-4 mx-auto max-w-sm z-50 bg-primary text-on-primary rounded-xl px-4 py-3 shadow-lg flex items-center gap-3 transform -translate-y-12 opacity-0 pointer-events-none transition-all duration-300" id="toast-message">

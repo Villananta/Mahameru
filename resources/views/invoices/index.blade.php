@@ -185,7 +185,9 @@
                      data-invoice-number="{{ $invoice->invoice_number }}"
                      data-client="{{ $invoice->client->name ?? 'N/A' }}"
                      data-amount="{{ $invoice->grand_total }}"
-                     data-status="{{ $invoice->status }}">
+                     data-status="{{ $invoice->status }}"
+                     data-due-date="{{ $invoice->due_date?->format('Y-m-d') ?? '' }}"
+                     data-is-overdue="{{ $isOverdue ? 'true' : 'false' }}">
                 <div class="absolute left-0 top-0 bottom-0 w-1.5 {{ $borderColor }}"></div>
                 <div class="flex items-start justify-between gap-2 pl-2">
                     <div class="flex flex-col">
@@ -262,7 +264,7 @@
 </div>
 
 <!-- Action Bottom Sheet -->
-<x-components.bottom-sheet 
+<x-bottom-sheet 
     id="invoice-action-sheet" 
     title="#INV-XXXX" 
     subtitle="PT Klien Contoh"
@@ -271,7 +273,7 @@
     <div id="sheet-content">
         <!-- Content injected by JS -->
     </div>
-</x-components.bottom-sheet>
+</x-bottom-sheet>
 
 @push('scripts')
 <script>
@@ -355,8 +357,9 @@
 
     // Action Sheet
     function openActionSheet(invoiceId, invoiceNo, clientName, amount, status) {
-        const content = document.getElementById('sheet-content');
-        const isOverdue = status === 'sent' && {{ $invoice->due_date && $invoice->due_date->isPast() ? 'true' : 'false' }};
+        const card = document.querySelector(`.invoice-card[data-invoice-id="${invoiceId}"]`);
+        const dueDateStr = card?.getAttribute('data-due-date');
+        const isOverdue = card?.getAttribute('data-is-overdue') === 'true';
         const isLocked = ['paid', 'cancelled'].includes(status);
         const format = (n) => 'Rp ' + Number(n).toLocaleString('id-ID');
 
