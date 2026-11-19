@@ -25,3 +25,13 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Cloned skill repos (added 2026-11-19)
+/andrej-karpathy-skills
+/anime
+/caveman
+/graphify
+/improve
+/motion
+/ponytail
+/superpowers
