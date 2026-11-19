@@ -111,15 +111,15 @@
                 <div class="flex flex-col gap-1.5">
                     <label class="font-label-caps text-label-caps text-secondary uppercase">Cepat Set Jatuh Tempo</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <button type="button" class="tempo-pill flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-surface-container-low text-secondary hover:bg-surface-container transition-all {{ $invoice->due_date->diffInDays($invoice->issue_date) == 7 ? 'bg-primary text-on-primary shadow-sm' : '' }}" @click="setTempo(7)">
+                        <button type="button" class="tempo-pill flex flex-col items-center justify-center py-2 px-1 rounded-lg bg-surface-container-low text-secondary hover:bg-surface-container transition-all {{ $isEdit && $invoice->due_date->diffInDays($invoice->issue_date) == 7 ? 'bg-primary text-on-primary shadow-sm' : '' }}" @click="setTempo(7)">
                             <span class="font-headline-sm text-headline-sm">+7 Hari</span>
                             <span class="font-label-caps text-numeric-sm opacity-80" x-text="formatDate(addDays(issueDate, 7))"></span>
                         </button>
-                        <button type="button" class="tempo-pill flex flex-col items-center justify-center py-2 px-1 rounded-lg {{ $invoice->due_date->diffInDays($invoice->issue_date) == 14 ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-low text-secondary hover:bg-surface-container' }} transition-all" @click="setTempo(14)">
+                        <button type="button" class="tempo-pill flex flex-col items-center justify-center py-2 px-1 rounded-lg {{ $isEdit && $invoice->due_date->diffInDays($invoice->issue_date) == 14 ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-low text-secondary hover:bg-surface-container' }} transition-all" @click="setTempo(14)">
                             <span class="font-headline-sm text-headline-sm">+14 Hari</span>
                             <span class="font-label-caps text-numeric-sm opacity-90" x-text="formatDate(addDays(issueDate, 14))"></span>
                         </button>
-                        <button type="button" class="tempo-pill flex flex-col items-center justify-center py-2 px-1 rounded-lg {{ $invoice->due_date->diffInDays($invoice->issue_date) == 30 ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-low text-secondary hover:bg-surface-container' }} transition-all" @click="setTempo(30)">
+                        <button type="button" class="tempo-pill flex flex-col items-center justify-center py-2 px-1 rounded-lg {{ $isEdit && $invoice->due_date->diffInDays($invoice->issue_date) == 30 ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-low text-secondary hover:bg-surface-container' }} transition-all" @click="setTempo(30)">
                             <span class="font-headline-sm text-headline-sm">+30 Hari</span>
                             <span class="font-label-caps text-numeric-sm opacity-80" x-text="formatDate(addDays(issueDate, 30))"></span>
                         </button>
@@ -143,17 +143,17 @@
                             <span class="w-6 h-6 rounded bg-surface-container-low text-secondary font-numeric-sm text-numeric-sm flex items-center justify-center shrink-0 mt-1" x-text="index + 1"></span>
                             <div class="flex-1">
                                 <label class="font-label-caps text-label-caps text-secondary mb-1 block uppercase">Nama Produk / Material</label>
-                                <textarea name="items[{{ index }}][description]" class="w-full p-2.5 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none resize-none leading-snug" rows="2" required x-model="item.description">{{ $isEdit ? $items[$index]->description ?? '' : '' }}</textarea>
+                                <textarea name="items[@{{ index }}][description]" class="w-full p-2.5 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none resize-none leading-snug" rows="2" required x-model="item.description">{{ $isEdit ? $items[$index]->description ?? '' : '' }}</textarea>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="font-label-caps text-label-caps text-secondary uppercase">Jumlah (Qty)</label>
-                                <input type="number" step="0.01" name="items[{{ index }}][quantity]" class="item-qty w-full h-11 px-3 rounded-lg bg-surface-container-low font-numeric-md text-numeric-md text-on-surface focus:outline-none" inputmode="decimal" required @input="recalc()" x-model.number="item.quantity" :value="item.quantity ?? 1">
+                                <input type="number" step="0.01" name="items[@{{ index }}][quantity]" class="item-qty w-full h-11 px-3 rounded-lg bg-surface-container-low font-numeric-md text-numeric-md text-on-surface focus:outline-none" inputmode="decimal" required @input="recalc()" x-model.number="item.quantity" :value="item.quantity ?? 1">
                             </div>
                             <div>
                                 <label class="font-label-caps text-label-caps text-secondary uppercase">Harga Satuan (Rp)</label>
-                                <input type="number" step="1" name="items[{{ index }}][unit_price]" class="item-price w-full h-11 px-3 rounded-lg bg-surface-container-low font-numeric-md text-numeric-md text-on-surface focus:outline-none" inputmode="numeric" required @input="recalc()" x-model.number="item.unit_price" :value="item.unit_price ?? 0">
+                                <input type="number" step="1" name="items[@{{ index }}][unit_price]" class="item-price w-full h-11 px-3 rounded-lg bg-surface-container-low font-numeric-md text-numeric-md text-on-surface focus:outline-none" inputmode="numeric" required @input="recalc()" x-model.number="item.unit_price" :value="item.unit_price ?? 0">
                             </div>
                         </div>
                         <div class="flex items-center justify-between pt-2">
@@ -201,8 +201,8 @@
                                 <span class="font-headline-sm text-body-md text-on-surface">Potongan / Diskon</span>
                             </div>
                             <div class="flex items-center bg-surface-container-lowest p-0.5 rounded">
-                                <button type="button" class="px-2 py-0.5 rounded text-xs font-semibold {{ discountType === 'percent' ? 'bg-primary text-on-primary' : 'text-secondary' }}" @click="setDiscountType('percent')">%</button>
-                                <button type="button" class="px-2 py-0.5 rounded text-xs font-semibold {{ discountType === 'fixed' ? 'bg-primary text-on-primary' : 'text-secondary' }}" @click="setDiscountType('fixed')">Rp</button>
+                                <button type="button" class="px-2 py-0.5 rounded text-xs font-semibold @{{ discountType === 'percent' ? 'bg-primary text-on-primary' : 'text-secondary' }}" @click="setDiscountType('percent')">%</button>
+                                <button type="button" class="px-2 py-0.5 rounded text-xs font-semibold @{{ discountType === 'fixed' ? 'bg-primary text-on-primary' : 'text-secondary' }}" @click="setDiscountType('fixed')">Rp</button>
                             </div>
                         </div>
                         <div class="flex items-center justify-between gap-3 mt-1">
@@ -284,7 +284,15 @@
         <!-- Scaled Mobile Paper Frame -->
         <div class="w-full overflow-hidden rounded-xl bg-surface-container-low p-2 sm:p-4 flex justify-center">
             <div class="w-full max-w-[620px] bg-surface-container-lowest text-on-surface rounded-lg shadow-md p-5 sm:p-8 flex flex-col gap-5 text-left">
-                <x-invoice-paper :invoice="invoice ?? (items.length ? createPreviewInvoice() : null)" mode="preview" />
+                @if($isEdit)
+                    <x-invoice-paper :invoice="$invoice" mode="preview" />
+                @else
+                    <div class="flex flex-col items-center justify-center py-12 text-secondary">
+                        <span class="material-symbols-outlined text-[48px] mb-3">preview</span>
+                        <span class="font-headline-sm text-headline-sm">Pratinjau tersedia setelah item ditambahkan</span>
+                        <span class="font-body-sm text-body-sm mt-1">Isi form lalu klik tab "Preview A4"</span>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -362,6 +370,8 @@
             taxRate: {{ $taxRate }},
             issueDate: '{{ $issueDate }}',
             dueDate: '{{ $dueDate }}',
+            invoiceNumber: '{{ $isEdit ? $invoice->invoice_number : '' }}',
+            notes: '{{ $notes ?? '' }}',
             selectedClient: null,
             quickClient: { name: '', npwp: '', phone: '', email: '', address: '' },
 
@@ -573,7 +583,7 @@
             // Helper for preview tab
             createPreviewInvoice() {
                 return {
-                    invoice_number: this.isEdit ? '{{ $invoice->invoice_number }}' : 'MS-PREVIEW',
+                    invoice_number: this.isEdit ? '@{{ invoiceNumber }}' : 'MS-PREVIEW',
                     client: this.selectedClient ? { name: this.selectedClient.name, address: this.selectedClient.address, npwp: this.selectedClient.npwp, email: this.selectedClient.email } : { name: 'Klien Belum Dipilih', address: '-', npwp: '-', email: '-' },
                     issue_date: { format: (f) => new Date(this.issueDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) },
                     due_date: { format: (f) => new Date(this.dueDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }), isPast: () => new Date(this.dueDate) < new Date() },
@@ -585,7 +595,7 @@
                     tax_rate: this.taxRate,
                     tax_amount: this.taxAmount,
                     grand_total: this.grandTotal,
-                    notes: '{{ $notes }}',
+                    notes: '@{{ notes }}',
                     status: 'draft',
                     updated_at: { format: () => new Date().toLocaleDateString('id-ID') }
                 };

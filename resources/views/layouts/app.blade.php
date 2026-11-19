@@ -84,7 +84,6 @@
             }
         };
     </script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen flex flex-col md:pl-60">
     <!-- Mobile Top Bar -->
