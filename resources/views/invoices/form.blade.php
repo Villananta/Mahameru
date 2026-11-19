@@ -143,17 +143,20 @@
                             <span class="w-6 h-6 rounded bg-surface-container-low text-secondary font-numeric-sm text-numeric-sm flex items-center justify-center shrink-0 mt-1" x-text="index + 1"></span>
                             <div class="flex-1">
                                 <label class="font-label-caps text-label-caps text-secondary mb-1 block uppercase">Nama Produk / Material</label>
-                                <textarea name="items[@{{ index }}][description]" class="w-full p-2.5 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none resize-none leading-snug" rows="2" required x-model="item.description">{{ $isEdit ? $items[$index]->description ?? '' : '' }}</textarea>
+                                <template x-if="item.id">
+                                    <input type="hidden" :name="'items[' + index + '][id]'" :value="item.id">
+                                </template>
+                                <textarea :name="'items[' + index + '][description]'" class="w-full p-2.5 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:outline-none resize-none leading-snug" rows="2" required x-model="item.description">{{ $isEdit ? $items[$index]->description ?? '' : '' }}</textarea>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="font-label-caps text-label-caps text-secondary uppercase">Jumlah (Qty)</label>
-                                <input type="number" step="0.01" name="items[@{{ index }}][quantity]" class="item-qty w-full h-11 px-3 rounded-lg bg-surface-container-low font-numeric-md text-numeric-md text-on-surface focus:outline-none" inputmode="decimal" required @input="recalc()" x-model.number="item.quantity" :value="item.quantity ?? 1">
+                                <input type="number" step="0.01" :name="'items[' + index + '][quantity]'" class="item-qty w-full h-11 px-3 rounded-lg bg-surface-container-low font-numeric-md text-numeric-md text-on-surface focus:outline-none" inputmode="decimal" required @input="recalc()" x-model.number="item.quantity" :value="item.quantity ?? 1">
                             </div>
                             <div>
                                 <label class="font-label-caps text-label-caps text-secondary uppercase">Harga Satuan (Rp)</label>
-                                <input type="number" step="1" name="items[@{{ index }}][unit_price]" class="item-price w-full h-11 px-3 rounded-lg bg-surface-container-low font-numeric-md text-numeric-md text-on-surface focus:outline-none" inputmode="numeric" required @input="recalc()" x-model.number="item.unit_price" :value="item.unit_price ?? 0">
+                                <input type="number" step="1" :name="'items[' + index + '][unit_price]'" class="item-price w-full h-11 px-3 rounded-lg bg-surface-container-low font-numeric-md text-numeric-md text-on-surface focus:outline-none" inputmode="numeric" required @input="recalc()" x-model.number="item.unit_price" :value="item.unit_price ?? 0">
                             </div>
                         </div>
                         <div class="flex items-center justify-between pt-2">
